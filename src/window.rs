@@ -15,7 +15,6 @@ pub struct Window {
 pub struct WindowManager {
     pub windows: Vec<Window>,
     pub current_offset: Option<u16>,
-    pub focused_index: Option<usize>,
     pub holding_index: Option<usize>,
 }
 
@@ -24,7 +23,6 @@ impl WindowManager {
         Self {
             windows: Vec::new(),
             current_offset: None,
-            focused_index: None,
             holding_index: None,
         }
     }
@@ -36,10 +34,9 @@ impl WindowManager {
 
         window.focused = true;
         self.windows.push(window);
-        self.focused_index = Some(self.windows.len() - 1);
     }
 
-    pub fn get_window_at_cords(&mut self, x: u16, y: u16) -> Option<usize> {
+    fn get_window_at_cords(&mut self, x: u16, y: u16) -> Option<usize> {
         self.windows
             .iter_mut()
             .enumerate()
@@ -76,22 +73,16 @@ impl WindowManager {
             }
         }
     }
+    pub fn focus_window(&mut self, index: usize) {
+        self.windows
+            .iter_mut()
+            .for_each(|window| window.focused = false);
+        let mut window = self.windows.remove(index);
+        window.focused = true;
+        self.windows.push(window);
+    }
     pub fn next_window(&mut self) {
-        if self.windows.is_empty() {
-            self.focused_index = None;
-            return;
-        }
-
-        let next = match self.focused_index {
-            Some(i) => (i + 1) % self.windows.len(),
-            None => 0,
-        };
-
-        for (i, w) in self.windows.iter_mut().enumerate() {
-            w.focused = i == next;
-        }
-
-        self.focused_index = Some(next);
+        self.focus_window(0);
     }
 
     pub fn draw(&self, f: &mut Frame) {
