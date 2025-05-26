@@ -15,7 +15,6 @@ pub struct Window {
 pub struct WindowManager {
     pub windows: Vec<Window>,
     pub current_offset: Option<u16>,
-    pub holding_index: Option<usize>,
 }
 
 impl WindowManager {
@@ -23,7 +22,6 @@ impl WindowManager {
         Self {
             windows: Vec::new(),
             current_offset: None,
-            holding_index: None,
         }
     }
 
@@ -47,11 +45,11 @@ impl WindowManager {
 
     pub fn hold_window(&mut self, x: u16, y: u16) {
         if let Some(index) = self.get_window_at_cords(x, y) {
-            let window = self.windows.get_mut(index).unwrap();
+            self.focus_window(index);
+            let window = self.windows.last_mut().unwrap();
             if y == window.area.y {
                 window.held = true;
                 self.current_offset = Some(x - window.area.x);
-                self.holding_index = Some(index);
             }
         }
     }
@@ -60,17 +58,13 @@ impl WindowManager {
             .iter_mut()
             .for_each(|window| window.held = false);
         self.current_offset = None;
-        self.holding_index = None;
     }
     pub fn move_window(&mut self, x: u16, y: u16) {
         let offset = self.current_offset.unwrap_or(0);
-        if let Some(index) = self.holding_index {
-            if let Some(window) = self.windows.get_mut(index) {
-                if window.held {
-                    window.area.x = x - offset;
-                    window.area.y = y;
-                }
-            }
+        let window = self.windows.last_mut().unwrap();
+        if window.held {
+            window.area.x = x.saturating_sub(offset);
+            window.area.y = y;
         }
     }
     pub fn focus_window(&mut self, index: usize) {
