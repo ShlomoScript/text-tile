@@ -14,13 +14,6 @@ impl App {
     pub fn new(terminal: DefaultTerminal) -> Self {
         let wm = WindowManager::new();
 
-        /*// this is sample window for testing purposes
-        wm.add_window(Window {
-            title: "Example Window".into(),
-            area: Rect::new(10, 5, 40, 10),
-            focused: true,
-        });*/
-
         Self {
             wm,
             terminal,
@@ -34,6 +27,7 @@ impl App {
             area,
             focused: true,
             held: false,
+            resizing: None,
         });
     }
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -49,10 +43,10 @@ impl App {
                     },
                     Event::Mouse(mouse) => match mouse.kind {
                         MouseEventKind::Down(MouseButton::Left) => {
-                            self.wm.hold_window(mouse.column, mouse.row)
+                            self.wm.left_mouse_down(mouse.column, mouse.row)
                         }
                         MouseEventKind::Drag(MouseButton::Left) => {
-                            self.wm.move_window(mouse.column, mouse.row)
+                            self.wm.left_mouse_drag(mouse.column, mouse.row)
                         }
                         MouseEventKind::Up(MouseButton::Left) => self.wm.let_windows_go(),
                         _ => {}
